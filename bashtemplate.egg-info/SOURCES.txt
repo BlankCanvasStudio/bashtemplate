@@ -1,0 +1,12 @@
+README.md
+setup.py
+bashtemplate/__init__.py
+bashtemplate/sliceid.py
+bashtemplate/temp_func_v1.py
+bashtemplate/template.py
+bashtemplate/tmain.py
+bashtemplate.egg-info/PKG-INFO
+bashtemplate.egg-info/SOURCES.txt
+bashtemplate.egg-info/dependency_links.txt
+bashtemplate.egg-info/requires.txt
+bashtemplate.egg-info/top_level.txt
