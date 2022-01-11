@@ -6,8 +6,9 @@ import bashtemplate.slice, bashtemplate.template, copy, bashparse
 # Generalize nodes
 
 def run_generalize_nodes(generalize_nodes):
-    return basic_generalization(generalize_nodes)
-
+    # return basic_generalization(generalize_nodes)
+    return parameter_tracking_generalization(generalize_nodes)
+    #return variable_tracking_generalization(generalize_nodes)
 
 def basic_generalization(generalize_nodes):
     # Basic replacement. 
@@ -38,6 +39,110 @@ def basic_generalization(generalize_nodes):
             for i in range(1, len(node.parts)): node.parts[i].word = "%d"
     return generalize_nodes
 
+
+def parameter_tracking_generalization(generalize_nodes):
+    """ This replacement scheme tracks the parameters used to show any consistency 
+    amoung the arguments. Start the parameter count at 0 and go up from there 
+    referencing a dictionary to maintain internal consistency
+    The number shouldn't matter but the pattern of the numbers will """
+    if type(generalize_nodes) is not list: generalize_nodes = [ generalize_nodes ]
+    params_used = {}
+    param_num = 0
+    for node in generalize_nodes:
+        if node.kind == 'word':
+            if node.word not in params_used: 
+                params_used[node.word] = str(param_num) 
+                param_num += 1
+            node.word = '%' + params_used[node.word]
+        if hasattr(node, 'parts'):
+            if node.kind == 'command':
+                if node.parts[0].kind == 'assignment':
+                    # Should the variable assignments always be different? I think yes
+                    # What about the values that are assigned?
+                    value_assigned = node.parts[0].word.split('=', 1)[1]
+                    if value_assigned not in params_used:
+                        params_used[value_assigned] = param_num 
+                        param_num += 1
+                    node.parts[0].word = "%d=%" + str(params_used[value_assigned])
+                for i in range(1, len(node.parts)):
+                    if node.parts[i].word not in params_used: 
+                        params_used[node.parts[i].word] = str(param_num) 
+                        param_num += 1
+                    node.parts[i].word = '%' + params_used[node.parts[i].word]
+            else:
+                for part in node.parts:
+                    parameter_tracking_generalization(part)
+                
+        if hasattr(node, 'list'):
+            for part in node.list:
+                parameter_tracking_generalization(part)
+        if hasattr(node,'command'):
+            parameter_tracking_generalization(node.command)
+        if hasattr(node, 'output'):
+            parameter_tracking_generalization(node.output)
+
+            for i in range(1, len(node.parts)): 
+                if node.parts[i].word not in params_used: 
+                    params_used[node.parts[i].word] = str(param_num) 
+                    param_num += 1
+                node.parts[i].word = '%' + params_used[node.parts[i].word]
+    return generalize_nodes
+
+
+def variable_tracking_generalization(generalize_nodes, params_used = {}, param_num = 0):
+    """ This funciton tracks the variable usage through the 
+    """
+    print('in the function')
+    if type(generalize_nodes) is not list: generalize_nodes = [ generalize_nodes ]
+    for node in generalize_nodes:
+        if node.kind == 'word':
+            if node.word not in params_used: 
+                params_used[node.word] = str(param_num) 
+                param_num += 1
+            node.word = '%' + params_used[node.word]
+        if hasattr(node, 'parts'):
+            if node.kind == 'command':
+                if node.parts[0].kind == 'assignment':
+                    # Theres no reason we can't use the param number here
+                    # Should the variable assignments always be different? I think yes
+                    # What about the values that are assigned?
+                    variable_name, value_assigned = node.parts[0].word.split('=', 1)
+                    # We should also assume its unrolled
+                    if value_assigned not in params_used:
+                        params_used[value_assigned] = str(param_num) 
+                        param_num += 1
+                    
+                    params_used['$'+variable_name] = str(param_num) 
+                    param_num += 1
+                    
+                    node.parts[0].word = "%" + params_used['$'+variable_name] +"=%" + params_used[value_assigned]
+                for i in range(1, len(node.parts)):
+                    node.parts = variable_tracking_generalization(node.parts[1:], params_used, param_num)
+
+            else:
+                for part in node.parts:
+                    print('dict: ', params_used)
+                    if part.kind != 'parameter':
+                        parameter_tracking_generalization(part)
+                    elif '$'+part.value in params_used:
+                        print('here2')
+                        node.word = node.word.replace(part.value, '%'+params_used['$'+part.value])
+                        node.parts.remove(part)
+
+        if hasattr(node, 'list'):
+            for part in node.list:
+                parameter_tracking_generalization(part)
+        if hasattr(node,'command'):
+            parameter_tracking_generalization(node.command)
+        if hasattr(node, 'output'):
+            parameter_tracking_generalization(node.output)
+
+            for i in range(1, len(node.parts)): 
+                if node.parts[i].word not in params_used: 
+                    params_used[node.parts[i].word] = str(param_num) 
+                    param_num += 1
+                node.parts[i].word = '%' + params_used[node.parts[i].word]
+    return generalize_nodes
 
 
 
