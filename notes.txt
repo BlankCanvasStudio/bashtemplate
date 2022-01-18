@@ -1,0 +1,59 @@
+Interesting ones to look at:
+    mining/a11b9fde4136e069a599e4866a8802832154be0dc73f1ab61056b18ee50ab5df
+    mining/bfa8aaac64ae60723b5b54dbd67556908b08840d0f1fafc8401d07f8f383b254
+    mining/cae7d1d4c803a2cf6feda5de705efad7693db7746cb40deed05dc23a92e904b4
+    mining/de397b8cee16d0545d103923f991b84c4de4a974a73ece4122b8e163f3fbcd84
+
+    not-mal/5265a344fd3d3c91d1e9169678e9dadf6296331ccf91132b99c728761bffb011
+    not-mal/2a05ebb49437119643062fb89e49a6501c810ba2b851335adea1a9de14e55b02
+    not-mal/be09ac318a91a2c82e01b79ac9c4917231fbe1c3d453f0f96312346456da9d91
+
+    sockets/76be8a16f98ff4030795f00ebb115e9239cc7e711e7cc10497f86e3c36f65bfa
+
+    torrenting/6ef88cda63af3c8762eccc5d23f228f7b2b591fcf5da839cc2760620d5c7fb91
+
+
+
+insides of for loops and if statements should be presented as possible chunks
+
+Add "$()" as a possibility 
+
+also "1"?
+
+Add support for piplined nodes?
+Also forwarding like >>
+
+Denote variables inside of things like strings?
+    I think so cause we really only care about final values for execution
+
+How do we deal with busybox???
+    Just treat it as its own tempalte and also strip out all the busyboxes??
+
+
+a structure for nesting templates
+
+consider templating the arguments?
+
+How to consider single line templates when they are repeated enough?
+    Futher we should be able to reduce templates when a bunch of lines are repeated in a row
+
+How to template the whole if statement??
+
+elif and if should be templated in the same way
+
+all of for loops and while loops should be templated in the same way
+    Need some equivalence principle to be able to tell that series of commands are functionally the same
+
+
+
+
+
+
+
+
+
+
+
+
+
+

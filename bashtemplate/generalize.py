@@ -1,14 +1,10 @@
-import bashtemplate.slice, bashtemplate.template, copy, bashparse
-
-
-
-
-# Generalize nodes
+import re, bashparse
 
 def run_generalize_nodes(generalize_nodes):
     # return basic_generalization(generalize_nodes)
     return parameter_tracking_generalization(generalize_nodes)
     #return variable_tracking_generalization(generalize_nodes)
+
 
 def basic_generalization(generalize_nodes):
     # Basic replacement. 
@@ -17,13 +13,13 @@ def basic_generalization(generalize_nodes):
     if type(generalize_nodes) is not list: generalize_nodes = [ generalize_nodes ]
     for node in generalize_nodes:
         if node.kind == 'word':
-            node.word = '%d'
+            node.word = '%s'
         if hasattr(node, 'parts'):
             if node.kind == 'command':
                 if node.parts[0].kind == 'assignment':
-                    node.parts[0].word = "%d=%d"
+                    node.parts[0].word = "%d=%s"
                 for i in range(1, len(node.parts)):
-                    node.parts[i].word = "%d"
+                    node.parts[i].word = "%s"
             else:
                 for part in node.parts:
                     basic_generalization(part)
@@ -65,10 +61,12 @@ def parameter_tracking_generalization(generalize_nodes):
                         param_num += 1
                     node.parts[0].word = "%d=%" + str(params_used[value_assigned])
                 for i in range(1, len(node.parts)):
-                    if node.parts[i].word not in params_used: 
-                        params_used[node.parts[i].word] = str(param_num) 
-                        param_num += 1
-                    node.parts[i].word = '%' + params_used[node.parts[i].word]
+                    print('node: ', node.parts[i])
+                    if hasattr(node.parts[i], 'word'):
+                        if node.parts[i].word not in params_used: 
+                            params_used[node.parts[i].word] = str(param_num) 
+                            param_num += 1
+                        node.parts[i].word = '%' + str(params_used[node.parts[i].word])
             else:
                 for part in node.parts:
                     parameter_tracking_generalization(part)
@@ -145,65 +143,47 @@ def variable_tracking_generalization(generalize_nodes, params_used = {}, param_n
     return generalize_nodes
 
 
+def is_url(string):
+    return  len(re.findall(
+            r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))", \
+            string))
 
-# identify template slices
+def is_path(string):
+    return len(re.findall(r"^(/[^/ ]*)+/?$", string))
 
-def run_identify_slices(nodes):
-    return identify_variable_slices(nodes)
+def interpret_string(word):
+    str_type = 'd'  # data / undefined
 
+    if word[0] == '-': str_type = 'f'  # flag
+    elif word[0:2] == '$(': str_type = 's'  # command substitution 
+    elif word[0] == '$': str_type = 'v'  # variable
+    elif is_url(word): str_type = 'u'  # url
+    elif is_path(word): str_type = 'p'  # path
 
-def identify_variable_slices(nodes):
-    # This is just going to grab slice indexes based on the variable locations
-    slices = []
-    assignment_slices = bashtemplate.slice.find_variable_slices(nodes)
-    for key in assignment_slices.keys():
-        # Strip out just the slices. Don't care about the variables involved
-        slices += assignment_slices[key]
-    # connected_slices = return_connected_slices(assignment_slices)
-    # dependent_slices = return_dependent_slices(connected_slices, nodes)
-    # slices += assignment_slices
-    cd_slices = bashtemplate.slice.find_cd_slices(nodes)
-    slices += cd_slices
-    
-    return slices
+    return '%s-' + str_type
 
+def context_based_generalization(generalize_ndoes):
+    if type(generalize_nodes) is not list: generalize_nodes = [ generalize_nodes ]
+    for node in generalize_nodes:
+        if node.kind == 'word':
+            node.word = interpret_string(node.word)
+        if hasattr(node, 'parts'):
+            if node.kind == 'command':
+                if node.parts[0].kind == 'assignment':
+                    value_assigned = node.parts[0].word.split('=', 1)[1]
+                    node.parts[0].word = "%d=%" + interpret_string(value_assigned)
+                for i in range(1, len(node.parts)):
+                    node.parts[i].word = '%' + interpret_string(node.parts[i].word)
+            else:
+                for part in node.parts:
+                    parameter_tracking_generalization(part)
+                
+        if hasattr(node, 'list'):
+            for part in node.list:
+                parameter_tracking_generalization(part)
+        if hasattr(node,'command'):
+            parameter_tracking_generalization(node.command)
+        if hasattr(node, 'output'):
+            parameter_tracking_generalization(node.output)
 
-
-
-# generate the templaces from slices
-
-def run_generate_templates(slices, nodes):
-    # primative turn every slice into a template
-    templates = []
-    for slce in slices:
-        text = ''
-        for i in range(slce.start[0], slce.end[0] + 1):
-            text += bashparse.convert_tree_to_string(nodes[i]) + ' ; '
-        text = text[:-1]
-        new_template = bashtemplate.Template(text = text, slices = [ slce ], ratio = ( ( slce.end[0] - slce.start[0] + 1 ) / len(nodes) ), raw_count = 1)
-        if new_template not in templates: templates += [ copy.deepcopy(new_template) ]
-        else: templates[templates.index(new_template)].inc_counts()
-    return templates
-
-
-
-
-# find the usefule templates
-
-def run_find_useful_templates(template_record):
-    # basic filtering alg: don't
-    templates = []
-    for key in template_record.keys():
-        templates += [ template_record[key] ]
-    
-    return templates
-
-
-
-
-# Update the nodes (ie unroll and replace them)
-
-def run_update_nodes(nodes):
-    var_list = bashparse.update_variable_list_with_node(nodes, {})
-    nodes = bashparse.substitute_variables(nodes, var_list)
-    return nodes
+    return generalize_nodes

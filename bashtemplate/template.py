@@ -1,11 +1,13 @@
 """ This file holds the definition of the template object """
+import bashparse, bashtemplate, copy
+
 
 class Template:
 
-    def __init__(self, text = '', slices = [None], ratio = -1, raw_count = 1):
-        if type(slices) is not list: slices = [slices]
+    def __init__(self, text = '', chunks = [None], ratio = -1, raw_count = 1):
+        if type(chunks) is not list: chunks = [chunks]
         self.text = text
-        self.slices = slices
+        self.chunks = chunks
         self.ratio = ratio
             # The length of the template relative to the file 
             # This can be used to control the granulatiry of the templating system
@@ -27,3 +29,34 @@ class Template:
     def __eq__(self, obj):
         return self.text == obj.text
     
+    
+
+
+
+# generate the templaces from chunks
+
+def run_generate_templates(chunks, nodes):
+    # primative turn every chunk into a template
+    templates = []
+    for slce in chunks:
+        text = ''
+        for i in range(slce.start[0], slce.end[0] + 1):
+            text += bashparse.convert_tree_to_string(nodes[i]) + ' ; '
+        text = text[:-1]
+        new_template = bashtemplate.Template(text = text, chunks = [ slce ], ratio = ( ( slce.end[0] - slce.start[0] + 1 ) / len(nodes) ), raw_count = 1)
+        if new_template not in templates: templates += [ copy.deepcopy(new_template) ]
+        else: templates[templates.index(new_template)].inc_counts()
+    return templates
+
+
+
+
+# find the usefule templates
+
+def run_find_useful_templates(template_record):
+    # basic filtering alg: don't
+    templates = []
+    for key in template_record.keys():
+        templates += [ template_record[key] ]
+    
+    return templates
